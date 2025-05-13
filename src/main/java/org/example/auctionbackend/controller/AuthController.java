@@ -3,32 +3,34 @@ package org.example.auctionbackend.controller;
 import org.example.auctionbackend.auth.AuthRequest;
 import org.example.auctionbackend.auth.AuthResponse;
 import org.example.auctionbackend.auth.RefreshRequest;
+import org.example.auctionbackend.auth.LoginRequest;
+import org.example.auctionbackend.auth.ChangePasswordRequest;
+import org.example.auctionbackend.dto.UserProfileDTO;
 import org.example.auctionbackend.model.User;
 import org.example.auctionbackend.repository.UserRepository;
 import org.example.auctionbackend.security.JwtUtils;
-import org.example.auctionbackend.auth.LoginRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.example.auctionbackend.auth.ChangePasswordRequest;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
+@Validated
 public class AuthController {
 
     private static final int MAX_FAILED_ATTEMPTS     = 5;
@@ -44,24 +46,24 @@ public class AuthController {
     private JwtUtils jwtUtils;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;  // <-- Ajouté
+    private PasswordEncoder passwordEncoder;
 
+    // ----- LOGIN -----
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(
-            @Valid @RequestBody LoginRequest loginRequest  // <-- utilisation du DTO de login
+            @Valid @RequestBody LoginRequest loginRequest
     ) {
         Optional<User> userOpt = userRepository.findByUsername(loginRequest.getUsername());
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Identifiants invalides.");
         }
         User user = userOpt.get();
 
-        // verrouillage
         if (user.isAccountLocked()) {
             LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION_MIN);
             if (LocalDateTime.now().isBefore(unlockTime)) {
-                return ResponseEntity
-                        .status(HttpStatus.LOCKED)
+                return ResponseEntity.status(HttpStatus.LOCKED)
                         .body("Compte verrouillé jusqu’à " + unlockTime);
             }
             user.setAccountLocked(false);
@@ -79,7 +81,6 @@ public class AuthController {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // reset après succès
             user.setFailedAttempts(0);
             userRepository.save(user);
 
@@ -88,7 +89,6 @@ public class AuthController {
             return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken));
 
         } catch (BadCredentialsException e) {
-            // incrémentation après échec
             int attempts = user.getFailedAttempts() + 1;
             user.setFailedAttempts(attempts);
             if (attempts >= MAX_FAILED_ATTEMPTS) {
@@ -96,15 +96,15 @@ public class AuthController {
                 user.setLockTime(LocalDateTime.now());
             }
             userRepository.save(user);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Identifiants invalides.");
         }
     }
-
 
     // ----- REGISTER -----
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(
-            @Valid @RequestBody AuthRequest authRequest     // <-- DTO d’inscription
+            @Valid @RequestBody AuthRequest authRequest
     ) {
         if (userRepository.findByUsername(authRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Nom d'utilisateur déjà utilisé");
@@ -126,7 +126,6 @@ public class AuthController {
         return ResponseEntity.ok("Utilisateur enregistré avec succès");
     }
 
-
     // ----- REFRESH -----
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(
@@ -136,17 +135,17 @@ public class AuthController {
         if (!jwtUtils.validateToken(refresh)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        String username = jwtUtils.getUsernameFromToken(refresh);
+        String username   = jwtUtils.getUsernameFromToken(refresh);
         String newAccess  = jwtUtils.generateAccessToken(username);
         String newRefresh = jwtUtils.generateRefreshToken(username);
         return ResponseEntity.ok(new AuthResponse(newAccess, newRefresh));
     }
 
-
     // ----- PROFILE -----
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/user/me")
     public ResponseEntity<UserProfileDTO> getProfile(
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         String username = userDetails.getUsername();
         return userRepository.findByUsername(username)
@@ -156,6 +155,7 @@ public class AuthController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    // ----- CHANGE PASSWORD -----
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
@@ -169,21 +169,14 @@ public class AuthController {
         }
         User user = userOpt.get();
 
-        // Vérifier l'ancien mot de passe
         if (!passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Ancien mot de passe incorrect.");
         }
 
-        // Mettre à jour avec le nouveau mot de passe hashé
         user.setPassword(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
 
         return ResponseEntity.ok("Mot de passe mis à jour avec succès.");
     }
-
-
-    // DTO interne pour le profil
-    public record UserProfileDTO(String username, String email, Double balance) {}
 }

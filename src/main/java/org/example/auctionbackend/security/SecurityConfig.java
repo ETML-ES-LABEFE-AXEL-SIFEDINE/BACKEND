@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/lots/**").permitAll()
+                        .requestMatchers("/api/user/top-up").authenticated()
                         // le reste nécessite authentification
                         .anyRequest().authenticated()
                 )
