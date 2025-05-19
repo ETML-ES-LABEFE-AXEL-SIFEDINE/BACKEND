@@ -25,13 +25,13 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Créditer le compte utilisateur d'un montant valide (multiple de 100 CHF minimum).
+     * Créditer le compte utilisateur d'un montant valide.
      * Enregistre également la transaction de type TOP_UP.
      *
      * @param username nom d'utilisateur
      * @param amount   montant à créditer
      * @return nouveau solde
-     * @throws IllegalArgumentException    si le montant n'est pas un multiple de 100 ou < 100
+     * @throws IllegalArgumentException    si le montant n'est pas < 100
      * @throws UsernameNotFoundException   si l'utilisateur n'existe pas
      */
     @Override

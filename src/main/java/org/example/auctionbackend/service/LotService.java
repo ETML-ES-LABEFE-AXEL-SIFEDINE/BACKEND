@@ -15,4 +15,7 @@ public interface LotService {
     Optional<LotDetailDTO> findById(Long id);
     List<LotDTO> findLatestLots(int count);
 
+    List<LotDTO> getFollowedLots(String username);
+
+
 }

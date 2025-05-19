@@ -6,9 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * Catégorie avec ses sous-catégories.
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -5,12 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
+import java.util.Set;
 
-/**
- * Représente un lot mis aux enchères.
- */
 @Entity
 @Table(name = "lots")
 @Data
@@ -53,5 +50,16 @@ public class Lot {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    // À venir : relation vers les enchères (Bid) pour calculer l’enchère courante
+    //prix courant :
+    @Column(name = "current_price", nullable = false)
+    private Double currentPrice;
+
+    //leader courant
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_leader_id")
+    private User currentLeader;
+
+    @OneToMany(mappedBy = "lot", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Bid> bids;
+
 }

@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Détail d’un lot, avec ses principales propriétés et (éventuellement) la liste des enchères.
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,6 +20,5 @@ public class LotDetailDTO {
     private String status;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-    // Pour l'instant, on met une liste vide ou stub ; plus tard listera les bids
     private List<BidDTO> bids;
 }

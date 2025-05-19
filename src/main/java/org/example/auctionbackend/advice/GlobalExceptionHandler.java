@@ -20,7 +20,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
             HttpHeaders headers,
-            HttpStatusCode status,            // <-- corrigé ici
+            HttpStatusCode status,
             WebRequest request) {
 
         Map<String, String> fieldErrors = new HashMap<>();

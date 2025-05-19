@@ -1,20 +1,17 @@
 package org.example.auctionbackend.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-/**
- * Représentation d’une enchère sur un lot (placeholder pour future implémentation).
- */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class BidDTO {
     private Long id;
-    private String bidderUsername;
+    private Long lotId;
+    private Long userId;
+    private String username;
     private Double amount;
-    private LocalDateTime timestamp;
+    private Instant placedAt;
 }

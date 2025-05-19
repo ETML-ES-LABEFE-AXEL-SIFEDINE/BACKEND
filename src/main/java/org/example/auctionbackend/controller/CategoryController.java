@@ -19,7 +19,7 @@ public class CategoryController {
 
     /**
      * GET /api/categories
-     * Renvoie les catégories de niveau 1 (sans parent)
+     * Renvoie les catégories de niveau 1
      */
     @GetMapping
     public List<CategoryDTO> getTopLevelCategories() {
