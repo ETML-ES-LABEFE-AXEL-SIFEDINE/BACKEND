@@ -38,8 +38,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public Double topUp(String username, Double amount) {
         // Validation métier
-        if (amount == null || amount < 100 || (amount % 100) != 0) {
-            throw new IllegalArgumentException("Le montant doit être un multiple de 100 CHF et ≥ 100");
+        if (amount == null || amount < 100) {
+            throw new IllegalArgumentException("Le montant doit être ≥ 100 CHF");
         }
 
         // Récupération de l'utilisateur
