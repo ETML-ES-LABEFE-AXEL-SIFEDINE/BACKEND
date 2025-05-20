@@ -116,6 +116,10 @@ public class LotServiceImpl implements LotService {
                 ? lot.getCurrentPrice()
                 : lot.getInitialPrice();
 
+        String leader = lot.getCurrentLeader() != null
+                ? lot.getCurrentLeader().getUsername()
+                : null;
+
         return new LotDetailDTO(
                 lot.getId(),
                 lot.getTitle(),
@@ -126,7 +130,8 @@ public class LotServiceImpl implements LotService {
                 computeStatus(lot),
                 lot.getStartDate(),
                 lot.getEndDate(),
-                Collections.emptyList()
+                Collections.emptyList(),
+                leader
         );
     }
 }
