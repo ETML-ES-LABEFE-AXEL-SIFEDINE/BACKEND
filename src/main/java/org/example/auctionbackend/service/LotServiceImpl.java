@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.auctionbackend.dto.LotDTO;
 import org.example.auctionbackend.dto.LotDetailDTO;
 import org.example.auctionbackend.model.Category;
+import org.example.auctionbackend.model.LotStatus;
 import org.example.auctionbackend.model.Lot;
 import org.example.auctionbackend.model.UserFollowedLot;
 import org.example.auctionbackend.repository.CategoryRepository;
@@ -20,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class LotServiceImpl implements LotService {
@@ -90,9 +91,25 @@ public class LotServiceImpl implements LotService {
                 lot.getDescription(),
                 lot.getCategory().getId(),
                 lot.getInitialPrice(),
-                current
+                current,
+                computeStatus(lot)
         );
     }
+
+    private String computeStatus(Lot lot) {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(lot.getStartDate())) {
+            return LotStatus.PENDING.name();
+        }
+        if (now.isAfter(lot.getEndDate())) {
+            // fin atteinte : si un leader courant → VENDU sinon NON VENDU
+            return lot.getCurrentLeader() != null
+                    ? LotStatus.SOLD.name()
+                    : LotStatus.UNSOLD.name();
+        }
+        return LotStatus.IN_PROGRESS.name();
+    }
+
 
     private LotDetailDTO toDetailDTO(Lot lot) {
         double current = lot.getCurrentPrice() != null
@@ -106,7 +123,7 @@ public class LotServiceImpl implements LotService {
                 lot.getCategory().getId(),
                 lot.getInitialPrice(),
                 current,
-                lot.getStatus().name(),
+                computeStatus(lot),
                 lot.getStartDate(),
                 lot.getEndDate(),
                 Collections.emptyList()

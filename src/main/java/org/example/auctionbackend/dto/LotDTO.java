@@ -14,4 +14,5 @@ public class LotDTO {
     private Long categoryId;
     private Double initialPrice;
     private Double currentBid;  // enchère courante
+    private String status;
 }
