@@ -85,20 +85,20 @@ Les diagrammes se trouvent dans le dossier [`docs/`](docs/) :
 
 ## 📊 API Endpoints
 
-| Méthode | Endpoint                  | Description                         | Sécurisé |
-| ------- | ------------------------- | ----------------------------------- | :------: |
-| POST    | `/api/auth/register`      | Inscription d’un nouvel utilisateur |     ❌    |
-| POST    | `/api/auth/login`         | Connexion (JWT)                     |     ❌    |
-| POST    | `/api/auth/refresh`       | Renouveler les tokens JWT           |     ❌    |
-| GET     | `/api/auth/user/me`       | Profil utilisateur (authentifié)    |     ✅    |
-| GET     | `/api/categories`         | Liste plate de catégories           |     ✅    |
-| GET     | `/api/categories/tree`    | Arborescence des catégories         |     ✅    |
-| GET     | `/api/lots`               | Liste paginée des lots              |     ✅    |
-| GET     | `/api/lots/{id}`          | Détail d’un lot                     |     ✅    |
-| GET     | `/api/lots/recent`        | Derniers lots ajoutés               |     ✅    |
-| POST    | `/api/lots/{id}/bids`     | Placer une enchère (en cours)       |     ✅    |
-| GET     | `/api/user/followed-lots` | Lots suivis                         |     ✅    |
-| POST    | `/api/user/top-up`        | Approvisionnement du compte         |     ✅    |
+| Méthode | Endpoint                  | Description                         |
+| ------- | ------------------------- | ----------------------------------- |
+| POST    | `/api/auth/register`      | Inscription d’un nouvel utilisateur |
+| POST    | `/api/auth/login`         | Connexion (JWT)                     |
+| POST    | `/api/auth/refresh`       | Renouveler les tokens JWT           |
+| GET     | `/api/auth/user/me`       | Profil utilisateur (authentifié)    |
+| GET     | `/api/categories`         | Liste plate de catégories           |
+| GET     | `/api/categories/tree`    | Arborescence des catégories         |
+| GET     | `/api/lots`               | Liste paginée des lots              |
+| GET     | `/api/lots/{id}`          | Détail d’un lot                     |
+| GET     | `/api/lots/recent`        | Derniers lots ajoutés               |
+| POST    | `/api/lots/{id}/bids`     | Placer une enchère (en cours)       |
+| GET     | `/api/user/followed-lots` | Lots suivis                         |
+| POST    | `/api/user/top-up`        | Approvisionnement du compte         |
 
 ---
 
@@ -117,4 +117,4 @@ Les diagrammes se trouvent dans le dossier [`docs/`](docs/) :
 
 ## 📝 Licence
 
-Sous licence **MIT** — voir [LICENSE](LICENSE).
+Sous licence **MIT**
