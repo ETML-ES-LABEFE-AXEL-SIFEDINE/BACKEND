@@ -1,0 +1,74 @@
+@startuml schema
+
+hide circle
+
+entity users {
+  * id : bigint <<PK, AUTO_INCREMENT>>
+  balance : double
+  email : varchar
+  password : varchar
+  username : varchar
+  account_locked : bit
+  failed_attempts : int
+  lock_time : datetime
+}
+
+entity categories {
+  * id : bigint <<PK, AUTO_INCREMENT>>
+  name : varchar
+  parent_id : bigint <<FK>>
+}
+
+entity lots {
+  * id : bigint <<PK, AUTO_INCREMENT>>
+  title : varchar
+  description : varchar
+  end_date : datetime
+  initial_price : double
+  start_date : datetime
+  status : enum
+  category_id : bigint <<FK>>
+  current_price : double
+  current_leader_id : bigint <<FK>>
+}
+
+entity bids {
+  * id : bigint <<PK, AUTO_INCREMENT>>
+  lot_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  amount : double
+  placed_at : datetime
+}
+
+entity user_followed_lots {
+  * user_id : bigint <<FK,PK>>
+  * lot_id : bigint <<FK,PK>>
+  followed_at : datetime
+}
+
+entity user_roles {
+  * user_id : bigint <<FK,PK>>
+  * role : varchar <<PK>>
+}
+
+entity user_transactions {
+  * id : bigint <<PK, AUTO_INCREMENT>>
+  user_id : bigint <<FK>>
+  amount : double
+  type : enum
+  timestamp : datetime
+}
+
+' Relations
+users ||--o{ bids                : places
+lots  ||--o{ bids                : contains
+users ||--o{ user_followed_lots  : follows
+lots  ||--o{ user_followed_lots  : followed_in
+users ||--o{ user_roles          : has
+users ||--o{ user_transactions   : makes
+categories ||--o{ lots            : contains
+categories ||--|| categories      : parent
+lots  }o--|| users                : current_leader
+lots  }o--|| categories           : category
+
+@enduml

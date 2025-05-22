@@ -17,6 +17,17 @@ Développé en Java 17+ avec Spring Boot, MySQL, et sécurisé par JWT (JSON Web
 * Suivi des enchères et aprovisonnement du solde et historique des transactions
 
 ---
+## 📚 Documentation
+
+Les diagrammes se trouvent dans le dossier [`docs/`](docs/) :
+
+- **Schéma relationnel (ER)**  
+  [`docs/schema.puml`](docs/schema.puml)  
+
+- **Diagramme de classes UML**  
+  [`docs/class-diagram.puml`](docs/class-diagram.puml)  
+
+---
 
 ## ✅ Prérequis
 

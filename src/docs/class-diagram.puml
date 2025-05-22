@@ -1,0 +1,78 @@
+@startuml classDiagram
+
+package model {
+  class User {
+    +Long id
+    +String username
+    +String email
+    +String password
+    +Double balance
+    +int failedAttempts
+    +boolean accountLocked
+    +LocalDateTime lockTime
+    +Set<String> roles
+  }
+
+  class Category {
+    +Long id
+    +String name
+    +Category parent
+    +Set<Category> children
+  }
+
+  class Lot {
+    +Long id
+    +String title
+    +String description
+    +Double initialPrice
+    +LocalDateTime startDate
+    +LocalDateTime endDate
+    +LotStatus status
+    +Double currentPrice
+    +User currentLeader
+    +Set<Bid> bids
+  }
+
+  class Bid {
+    +Long id
+    +Double amount
+    +LocalDateTime placedAt
+    +User user
+    +Lot lot
+  }
+
+  class UserFollowedLot {
+    +UserFollowedLotId id
+    +User user
+    +Lot lot
+    +LocalDateTime followedAt
+  }
+
+  class UserTransaction {
+    +Long id
+    +Double amount
+    +TransactionType type
+    +LocalDateTime timestamp
+    +User user
+  }
+
+  class UserFollowedLotId {
+    +Long userId
+    +Long lotId
+  }
+
+}
+
+' Associations
+User "1" -- "0..*" Bid
+Lot  "1" -- "0..*" Bid
+User "1" -- "0..*" UserFollowedLot
+Lot  "1" -- "0..*" UserFollowedLot
+User "1" -- "0..*" UserTransaction
+Category "1" -- "0..*" Lot
+Category "1" -- "0..*" Category : children
+Category "0..1" -- "0..*" Category : parent
+Lot "0..1" -- "0..1" User : currentLeader
+UserFollowedLot o-- UserFollowedLotId
+
+@enduml
