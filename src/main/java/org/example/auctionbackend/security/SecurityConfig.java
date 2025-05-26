@@ -43,9 +43,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            AuthenticationManager authManager) throws Exception {
         http
-                // 1) Active CORS en s'appuyant sur ton CorsConfig via Customizer
+                // 1) Active CORS en s'appuyant sur le CorsConfig via Customizer
                 .cors(Customizer.withDefaults())
-                // 2) Désactive CSRF (tu es en JWT stateless)
+                // 2) Désactive CSRF (JWT stateless)
                 .csrf(csrf -> csrf.disable())
                 // 3) Session stateless
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -68,7 +68,7 @@ public class SecurityConfig {
                 )
                 // 6) AuthenticationManager
                 .authenticationManager(authManager)
-                // 7) Ton filtre JWT
+                // 7) Filtre JWT
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

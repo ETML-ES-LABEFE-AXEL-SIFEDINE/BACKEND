@@ -30,7 +30,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         Map<String, Object> body = new HashMap<>();
         body.put("code", "VALIDATION_ERROR");
-        body.put("message", "Certains champs sont invalides");
+        body.put("message", "Some fields are invalid");
         body.put("timestamp", Instant.now().toString());
         body.put("errors", fieldErrors);
 

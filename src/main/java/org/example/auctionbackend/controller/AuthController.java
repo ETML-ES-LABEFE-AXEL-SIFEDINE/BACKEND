@@ -9,7 +9,6 @@ import org.example.auctionbackend.dto.UserProfileDTO;
 import org.example.auctionbackend.model.User;
 import org.example.auctionbackend.repository.UserRepository;
 import org.example.auctionbackend.security.JwtUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +22,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
+
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
@@ -31,22 +32,16 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 @Validated
+@RequiredArgsConstructor
 public class AuthController {
 
     private static final int MAX_FAILED_ATTEMPTS     = 5;
     private static final long LOCK_TIME_DURATION_MIN = 2; // minutes
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
 
     // ----- LOGIN -----
     @PostMapping("/login")

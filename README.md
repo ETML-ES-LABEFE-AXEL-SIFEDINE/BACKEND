@@ -14,7 +14,7 @@ Développé en Java 17+ avec Spring Boot, MySQL, et sécurisé par JWT (JSON Web
 * Gestion des catégories avec arborescence (catégories et sous-catégories)
 * Gestion des lots (enchères) avec pagination
 * Système de verrouillage de compte après plusieurs échecs de connexion
-* Suivi des enchères et aprovisonnement du solde et historique des transactions
+* Suivi des enchères et approvisionnement du solde et historique des transactions
 
 ---
 ## 📚 Documentation
