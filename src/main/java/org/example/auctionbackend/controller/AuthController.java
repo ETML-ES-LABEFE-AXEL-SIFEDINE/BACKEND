@@ -44,7 +44,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     // ----- CREATE SESSION (login) -----
-    @PostMapping("/api/sessions")
+    @PostMapping("/sessions")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Optional<User> userOpt = userRepository.findByUsername(loginRequest.getUsername());
         if (userOpt.isEmpty()) {
@@ -92,7 +92,7 @@ public class AuthController {
     }
 
     // ----- CREATE USER (register) -----
-    @PostMapping("/api/users")
+    @PostMapping("/users")
     public ResponseEntity<?> registerUser(@Valid @RequestBody AuthRequest authRequest) {
         if (userRepository.findByUsername(authRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already in use");
@@ -114,7 +114,7 @@ public class AuthController {
     }
 
     // ----- CREATE TOKEN (refresh) -----
-    @PostMapping("/api/tokens")
+    @PostMapping("/tokens")
     public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshRequest req) {
         String refresh = req.getRefreshToken();
         if (!jwtUtils.validateToken(refresh)) {
@@ -128,7 +128,7 @@ public class AuthController {
 
     // ----- GET PROFILE -----
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/api/users/me")
+    @GetMapping("/users/me")
     public ResponseEntity<UserProfileDTO> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
         return userRepository.findByUsername(userDetails.getUsername())
                 .map(u -> ResponseEntity.ok(new UserProfileDTO(u.getUsername(), u.getEmail(), u.getBalance())))
@@ -137,7 +137,7 @@ public class AuthController {
 
     // ----- CHANGE PASSWORD -----
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/api/users/me/password")
+    @PostMapping("/users/me/password")
     public ResponseEntity<?> changePassword(
             @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody ChangePasswordRequest req
