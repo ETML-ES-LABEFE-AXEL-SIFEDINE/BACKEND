@@ -1,4 +1,3 @@
-**# Auction Backend
 
 ## 🚀 Introduction
 
