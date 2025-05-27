@@ -1,5 +1,6 @@
 package org.example.auctionbackend.security;
 
+import lombok.RequiredArgsConstructor;
 import org.example.auctionbackend.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ import org.springframework.security.config.Customizer;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
@@ -29,46 +31,28 @@ public class SecurityConfig {
     private final AuthenticationEntryPoint authEntryPoint;
     private final AccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter,
-                          UserDetailsServiceImpl userDetailsService,
-                          RestAuthenticationEntryPoint authEntryPoint,
-                          RestAccessDeniedHandler accessDeniedHandler) {
-        this.jwtFilter = jwtFilter;
-        this.userDetailsService = userDetailsService;
-        this.authEntryPoint = authEntryPoint;
-        this.accessDeniedHandler = accessDeniedHandler;
-    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            AuthenticationManager authManager) throws Exception {
         http
-                // 1) Active CORS en s'appuyant sur le CorsConfig via Customizer
                 .cors(Customizer.withDefaults())
-                // 2) Désactive CSRF (JWT stateless)
                 .csrf(csrf -> csrf.disable())
-                // 3) Session stateless
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 4) Gestion des erreurs
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 )
-                // 5) Règles d’autorisation
                 .authorizeHttpRequests(auth -> auth
-                        // autoriser les preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // tes endpoints publics
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/sessions").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/tokens").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/lots/**").permitAll()
                         .requestMatchers("/api/user/top-up").authenticated()
-                        // le reste nécessite authentification
                         .anyRequest().authenticated()
                 )
-                // 6) AuthenticationManager
                 .authenticationManager(authManager)
-                // 7) Filtre JWT
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

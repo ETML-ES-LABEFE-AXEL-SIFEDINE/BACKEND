@@ -1,3 +1,5 @@
+// src/main/java/org/example/auctionbackend/controller/AuthController.java
+
 package org.example.auctionbackend.controller;
 
 import org.example.auctionbackend.auth.AuthRequest;
@@ -24,13 +26,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
-
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth")
 @Validated
 @RequiredArgsConstructor
 public class AuthController {
@@ -43,15 +43,12 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
 
-    // ----- LOGIN -----
-    @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(
-            @Valid @RequestBody LoginRequest loginRequest
-    ) {
+    // ----- CREATE SESSION (login) -----
+    @PostMapping("/api/sessions")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Optional<User> userOpt = userRepository.findByUsername(loginRequest.getUsername());
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Identifiants invalides.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
         User user = userOpt.get();
 
@@ -59,7 +56,7 @@ public class AuthController {
             LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION_MIN);
             if (LocalDateTime.now().isBefore(unlockTime)) {
                 return ResponseEntity.status(HttpStatus.LOCKED)
-                        .body("Compte verrouillé jusqu’à " + unlockTime);
+                        .body("Account locked until " + unlockTime);
             }
             user.setAccountLocked(false);
             user.setFailedAttempts(0);
@@ -68,22 +65,21 @@ public class AuthController {
         }
 
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
                             loginRequest.getPassword()
                     )
             );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
+            SecurityContextHolder.getContext().setAuthentication(auth);
             user.setFailedAttempts(0);
             userRepository.save(user);
 
-            String accessToken  = jwtUtils.generateAccessToken(authentication.getName());
-            String refreshToken = jwtUtils.generateRefreshToken(authentication.getName());
+            String accessToken  = jwtUtils.generateAccessToken(auth.getName());
+            String refreshToken = jwtUtils.generateRefreshToken(auth.getName());
             return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken));
 
-        } catch (BadCredentialsException e) {
+        } catch (BadCredentialsException ex) {
             int attempts = user.getFailedAttempts() + 1;
             user.setFailedAttempts(attempts);
             if (attempts >= MAX_FAILED_ATTEMPTS) {
@@ -91,41 +87,35 @@ public class AuthController {
                 user.setLockTime(LocalDateTime.now());
             }
             userRepository.save(user);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Identifiants invalides.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
 
-    // ----- REGISTER -----
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(
-            @Valid @RequestBody AuthRequest authRequest
-    ) {
+    // ----- CREATE USER (register) -----
+    @PostMapping("/api/users")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody AuthRequest authRequest) {
         if (userRepository.findByUsername(authRequest.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("Nom d'utilisateur déjà utilisé");
+            return ResponseEntity.badRequest().body("Username already in use");
         }
         if (userRepository.findByEmail(authRequest.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email déjà utilisé");
+            return ResponseEntity.badRequest().body("Email already in use");
         }
 
-        String encodedPassword = passwordEncoder.encode(authRequest.getPassword());
         User newUser = User.builder()
                 .username(authRequest.getUsername())
                 .email(authRequest.getEmail())
-                .password(encodedPassword)
+                .password(passwordEncoder.encode(authRequest.getPassword()))
                 .balance(0.0)
                 .build();
         newUser.getRoles().add("ROLE_USER");
         userRepository.save(newUser);
 
-        return ResponseEntity.ok("Utilisateur enregistré avec succès");
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered");
     }
 
-    // ----- REFRESH -----
-    @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(
-            @RequestBody RefreshRequest req
-    ) {
+    // ----- CREATE TOKEN (refresh) -----
+    @PostMapping("/api/tokens")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshRequest req) {
         String refresh = req.getRefreshToken();
         if (!jwtUtils.validateToken(refresh)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -136,42 +126,33 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(newAccess, newRefresh));
     }
 
-    // ----- PROFILE -----
+    // ----- GET PROFILE -----
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/user/me")
-    public ResponseEntity<UserProfileDTO> getProfile(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        String username = userDetails.getUsername();
-        return userRepository.findByUsername(username)
-                .map(u -> ResponseEntity.ok(
-                        new UserProfileDTO(u.getUsername(), u.getEmail(), u.getBalance())
-                ))
+    @GetMapping("/api/users/me")
+    public ResponseEntity<UserProfileDTO> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        return userRepository.findByUsername(userDetails.getUsername())
+                .map(u -> ResponseEntity.ok(new UserProfileDTO(u.getUsername(), u.getEmail(), u.getBalance())))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     // ----- CHANGE PASSWORD -----
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/change-password")
+    @PostMapping("/api/users/me/password")
     public ResponseEntity<?> changePassword(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal UserDetails principal,
             @Valid @RequestBody ChangePasswordRequest req
     ) {
-        String username = userDetails.getUsername();
+        String username = principal.getUsername();
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         User user = userOpt.get();
-
         if (!passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Ancien mot de passe incorrect.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Old password incorrect");
         }
-
         user.setPassword(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
-
-        return ResponseEntity.ok("Mot de passe mis à jour avec succès.");
+        return ResponseEntity.ok("Password updated");
     }
 }
