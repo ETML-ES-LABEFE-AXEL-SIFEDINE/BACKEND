@@ -1,120 +1,124 @@
-# Auction Backend
+**# Auction Backend
 
 ## 🚀 Introduction
 
-Ce projet est une API RESTful pour une plateforme de vente aux enchères en ligne.
-Développé en Java 17+ avec Spring Boot, MySQL, et sécurisé par JWT (JSON Web Token).
+This project is a **RESTful API** for an online auction platform.
+It is built with **Java 17**, **Spring Boot 3.4.5**, **MySQL 8** and secured with **JWT**.
 
 ---
 
-## 📌 Fonctionnalités
+## 📌 Features
 
-* Gestion des utilisateurs (inscription, connexion, changement de mot de passe, profil)
-* Authentification sécurisée avec JWT (Access Token & Refresh Token)
-* Gestion des catégories avec arborescence (catégories et sous-catégories)
-* Gestion des lots (enchères) avec pagination
-* Système de verrouillage de compte après plusieurs échecs de connexion
-* Suivi des enchères et approvisionnement du solde et historique des transactions
-
----
-## 📚 Documentation
-
-Les diagrammes se trouvent dans le dossier [`docs/`](docs/) :
-
-- **Schéma relationnel (ER)**  
-  [`docs/schema.puml`](docs/schema.puml)  
-
-- **Diagramme de classes UML**  
-  [`docs/class-diagram.puml`](docs/class-diagram.puml)  
+* User management (sign‑up, login, password change, profile)
+* JWT‑based authentication (access + refresh tokens)
+* Category tree management (parent / sub‑categories)
+* Lot (auction) management with pagination & filtering
+* Account lock‑out after repeated failed logins
+* Bid tracking, balance top‑up and transaction history
 
 ---
 
-## ✅ Prérequis
+## 📚 Project documentation
 
-| Outil | Version minimale |
-| ----- | ---------------- |
-| Java  | 17               |
-| Maven | 3.6+             |
-| MySQL | 8+               |
-| Git   | 2.20+            |
+PlantUML diagrams are stored in [`docs/`](docs/):
+
+| Diagram                  | File                                                 |
+| ------------------------ | ---------------------------------------------------- |
+| Entity‑relationship (ER) | [`docs/schema.puml`](docs/schema.puml)               |
+| UML class diagram        | [`docs/class-diagram.puml`](docs/class-diagram.puml) |
 
 ---
 
-## ⚙️ Installation
+## ✅ Prerequisites
 
-1. **Cloner le dépôt :**
+| Tool  | Minimum version |
+| ----- | --------------- |
+| Java  | 17              |
+| Maven | 3.6             |
+| MySQL | 8               |
+
+---
+
+## ⚙️ Local installation (dev profile)
+
+1. **Clone the repo**
 
    ```bash
-   git clone <URL-du-repo>
+   git clone <repo‑url>
    cd auction-backend
    ```
-
-2. **Configurer la base de données**
-   Dans `src/main/resources/application.properties` ou `application.yml` :
+2. **Configure the database** – edit `src/main/resources/application.properties` (or use env vars):
 
    ```properties
    spring.datasource.url=jdbc:mysql://localhost:3306/auction_db?allowPublicKeyRetrieval=true&useSSL=false
-   spring.datasource.username=root
-   spring.datasource.password=<VOTRE_MOT_DE_PASSE>
+   spring.datasource.username=<YOUR_USERNAME>
+   spring.datasource.password=<YOUR_PASSWORD>
    ```
-
-3. **Lancer l’application en mode développement :**
-
-   ```bash
-   mvn spring-boot:run
-   ```
-
-   Elle tourne alors sur `http://localhost:8080` par défaut.
+3. **Run the API**
 
 
----
 
+   The API is now available at **`http://localhost:8000/api/v1`**.
 
-## 🔑 Configuration JWT
-
-* Clé et durées dans `JwtUtils`.
-* Stockez-les en variables d’environnement :
-
-  ```properties
-  jwt.secret=${JWT_SECRET}
-  jwt.accessTokenExpirationMs=${JWT_ACCESS_EXPIRATION}
-  jwt.refreshTokenExpirationMs=${JWT_REFRESH_EXPIRATION}
-  ```
+> ℹ️  The version prefix `/api/v1` is injected globally via
+>
+> ```properties
+> server.servlet.context-path=/api/v1
+> ```
+>
 
 ---
 
-## 📊 API Endpoints
+## 🔑 JWT configuration
 
-| Méthode | Endpoint                  | Description                         |
-| ------- | ------------------------- | ----------------------------------- |
-| POST    | `/api/auth/register`      | Inscription d’un nouvel utilisateur |
-| POST    | `/api/auth/login`         | Connexion (JWT)                     |
-| POST    | `/api/auth/refresh`       | Renouveler les tokens JWT           |
-| GET     | `/api/auth/user/me`       | Profil utilisateur (authentifié)    |
-| GET     | `/api/categories`         | Liste plate de catégories           |
-| GET     | `/api/categories/tree`    | Arborescence des catégories         |
-| GET     | `/api/lots`               | Liste paginée des lots              |
-| GET     | `/api/lots/{id}`          | Détail d’un lot                     |
-| GET     | `/api/lots/recent`        | Derniers lots ajoutés               |
-| POST    | `/api/lots/{id}/bids`     | Placer une enchère (en cours)       |
-| GET     | `/api/user/followed-lots` | Lots suivis                         |
-| POST    | `/api/user/top-up`        | Approvisionnement du compte         |
+```properties
+jwt.secret-key=${JWT_SECRET_KEY:change-me-in-dev}
+jwt.access-expiration-ms=${JWT_ACCESS_EXP_MS:900000}
+jwt.refresh-expiration-ms=${JWT_REFRESH_EXP_MS:604800000}
+```
 
 ---
 
-## 📌 Gestion des erreurs
+## 📊 API Endpoints (v1)
 
-* **GlobalExceptionHandler** centralise les réponses d’erreur.
-* Codes HTTP & messages clairs :
+| Method              | Endpoint                                | Description                                               |
+| ------------------- | --------------------------------------- | --------------------------------------------------------- |
+| **Auth / Sessions** |                                         |                                                           |
+| POST                | `/api/v1/sessions`                      | Login – create session (returns JWTs)                     |
+| POST                | `/api/v1/users`                         | User registration                                         |
+| POST                | `/api/v1/tokens`                        | Refresh access token                                      |
+| GET                 | `/api/v1/users/me`                      | Current user profile                                      |
+| POST                | `/api/v1/users/me/password`             | Change password                                           |
+| **Categories**      |                                         |                                                           |
+| GET                 | `/api/v1/categories`                    | Top‑level categories                                      |
+| GET                 | `/api/v1/categories/{id}/subcategories` | Sub‑categories of *id*                                    |
+| GET                 | `/api/v1/categories/tree`               | Full category tree                                        |
+| **Lots**            |                                         |                                                           |
+| GET                 | `/api/v1/lots`                          | Paginated lots (query params: `category`, `page`, `size`) |
+| GET                 | `/api/v1/lots/{id}`                     | Lot details                                               |
+| GET                 | `/api/v1/lots/recent`                   | Latest 8 lots                                             |
+| POST                | `/api/v1/lots/{id}/bids`                | Place a bid on lot *id*                                   |
+| **User account**    |                                         |                                                           |
+| POST                | `/api/v1/user/top-up`                   | Add funds to balance                                      |
+| GET                 | `/api/v1/user/transactions`             | Transaction history                                       |
+| GET                 | `/api/v1/user/followed-lots`            | Lots the user follows                                     |
 
-  * **400 Bad Request** : validation, règles métier
-  * **401 Unauthorized** : token manquant/invalide
-  * **403 Forbidden** : accès non autorisé
-  * **404 Not Found** : ressource inexistante
-  * **500 Internal Server Error** : erreur interne
+---
+
+## 📌 Error handling
+
+Errors are centralised in **`GlobalExceptionHandler`** and follow these conventions:
+
+| Status                    | Reason                                |
+| ------------------------- | ------------------------------------- |
+| 400 Bad Request           | Validation or business rule violation |
+| 401 Unauthorized          | Missing / invalid token               |
+| 403 Forbidden             | Authenticated but not allowed         |
+| 404 Not Found             | Resource doesn’t exist                |
+| 500 Internal Server Error | Unexpected server failure             |
 
 ---
 
 ## 📝 Licence
 
-Sous licence **MIT**
+Released under the **MIT** licence.
