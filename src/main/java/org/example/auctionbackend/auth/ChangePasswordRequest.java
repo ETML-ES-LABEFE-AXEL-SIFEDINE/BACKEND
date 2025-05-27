@@ -12,14 +12,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChangePasswordRequest {
 
-    @NotBlank(message = "L'ancien mot de passe est obligatoire")
+    @NotBlank(message = "Old password required")
     private String oldPassword;
 
-    @NotBlank(message = "Le nouveau mot de passe est obligatoire")
-    @Size(min = 8, message = "Le mot de passe doit faire au moins 8 caractères")
+    @NotBlank(message = "The new password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).+$",
-            message = "Le mot de passe doit contenir majuscule, minuscule, chiffre et caractère spécial"
+            message = "The password must contain upper and lower case letters, numbers and special characters."
     )
     private String newPassword;
 }

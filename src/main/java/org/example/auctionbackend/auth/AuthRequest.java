@@ -12,19 +12,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthRequest {
-    @NotBlank(message = "Le nom d’utilisateur est obligatoire")
-    @Size(min = 3, max = 50, message = "Le nom d’utilisateur doit faire entre 3 et 50 caractères")
+    @NotBlank(message = "Username is mandatory")
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters long")
     private String username;
 
-    @NotBlank(message = "L’email est obligatoire")
-    @Email(message = "L’email doit être valide")
+    @NotBlank(message = "Email is mandatory")
+    @Email(message = "The email must be valid")
     private String email;
 
-    @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 8, message = "Le mot de passe doit faire au moins 8 caractères")
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).+$",
-            message = "Le mot de passe doit contenir majuscule, minuscule, chiffre et caractère spécial"
+            message = "The password must contain upper and lower case letters, numbers and special characters."
     )
     private String password;
 }

@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginRequest {
-    @NotBlank(message = "Le nom d’utilisateur est obligatoire")
+    @NotBlank(message = "Username is mandatory")
     private String username;
 
-    @NotBlank(message = "Le mot de passe est obligatoire")
+    @NotBlank(message = "Password is mandatory")
     private String password;
 }
