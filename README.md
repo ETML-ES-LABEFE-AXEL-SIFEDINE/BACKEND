@@ -81,7 +81,7 @@ jwt.refresh-expiration-ms=${JWT_REFRESH_EXP_MS:604800000}
 ## 📊 API Endpoints (v1)
 
 | Method              | Endpoint                                | Description                                               |
-| ------------------- | --------------------------------------- | --------------------------------------------------------- |
+|---------------------| --------------------------------------- |-----------------------------------------------------------|
 | **Auth / Sessions** |                                         |                                                           |
 | POST                | `/api/v1/sessions`                      | Login – create session (returns JWTs)                     |
 | POST                | `/api/v1/users`                         | User registration                                         |
@@ -96,6 +96,7 @@ jwt.refresh-expiration-ms=${JWT_REFRESH_EXP_MS:604800000}
 | GET                 | `/api/v1/lots`                          | Paginated lots (query params: `category`, `page`, `size`) |
 | GET                 | `/api/v1/lots/{id}`                     | Lot details                                               |
 | GET                 | `/api/v1/lots/recent`                   | Latest 8 lots                                             |
+| POST                | `/api/v1/lots`                          | Create a new lot                                          |
 | POST                | `/api/v1/lots/{id}/bids`                | Place a bid on lot *id*                                   |
 | **User account**    |                                         |                                                           |
 | POST                | `/api/v1/user/top-up`                   | Add funds to balance                                      |
