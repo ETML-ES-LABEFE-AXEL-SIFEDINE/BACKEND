@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/tokens").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/lots/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/lots").authenticated()
                         .requestMatchers("/user/top-up").authenticated()
                         .anyRequest().authenticated()
                 )

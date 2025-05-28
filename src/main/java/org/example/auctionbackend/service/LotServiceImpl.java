@@ -2,6 +2,7 @@ package org.example.auctionbackend.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.auctionbackend.dto.LotDTO;
+import org.example.auctionbackend.dto.CreateLotRequestDTO;
 import org.example.auctionbackend.dto.LotDetailDTO;
 import org.example.auctionbackend.model.Category;
 import org.example.auctionbackend.model.LotStatus;
@@ -76,6 +77,34 @@ public class LotServiceImpl implements LotService {
         return suivis.stream()
                 .map(ufl -> toDTO(ufl.getLot()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public LotDTO createLot(CreateLotRequestDTO req) {
+        // 1) Charger la catégorie
+        Category category = categoryRepository.findById(req.getCategoryId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Category not found: " + req.getCategoryId())
+                );
+
+        // 2) Construire l'entité Lot
+        Lot lot = Lot.builder()
+                .title(req.getTitle())
+                .description(req.getDescription())
+                .initialPrice(req.getInitialPrice())
+                .currentPrice(req.getInitialPrice())
+                .startDate(req.getStartDate())
+                .endDate(req.getEndDate())
+                .status(LotStatus.PENDING)
+                .category(category)
+                .build();
+
+        // 3) Sauvegarder en base
+        Lot saved = lotRepository.save(lot);
+
+        // 4) Retourner le DTO
+        return toDTO(saved);
     }
 
     // === mapping ===

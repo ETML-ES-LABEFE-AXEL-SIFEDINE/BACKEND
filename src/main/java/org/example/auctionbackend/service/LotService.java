@@ -1,6 +1,7 @@
 package org.example.auctionbackend.service;
 
 import org.example.auctionbackend.dto.LotDetailDTO;
+import org.example.auctionbackend.dto.CreateLotRequestDTO;
 import org.example.auctionbackend.dto.LotDTO;
 import org.springframework.data.domain.Page;
 import java.util.List;
@@ -17,5 +18,12 @@ public interface LotService {
 
     List<LotDTO> getFollowedLots(String username);
 
+    /**
+     * Crée un nouveau lot (status = PENDING).
+     *
+     * @param req DTO de création
+     * @return le LotDTO du lot créé
+     */
+    LotDTO createLot(CreateLotRequestDTO req);
 
 }

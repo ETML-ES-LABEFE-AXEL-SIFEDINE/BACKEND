@@ -15,7 +15,7 @@ public class ChangePasswordRequest {
     @NotBlank(message = "Old password required")
     private String oldPassword;
 
-    @NotBlank(message = "The new password is mandatory")
+    @NotBlank(message = "The new password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).+$",
