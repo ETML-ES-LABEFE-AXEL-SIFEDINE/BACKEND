@@ -8,6 +8,6 @@ import jakarta.validation.constraints.Min;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TopUpRequestDTO {
-    @Min(value = 100, message = "Le montant doit être au moins 100 CHF")
+    @Min(value = 100, message = "The amount must be at least CHF 100")
     private Double amount;
 }

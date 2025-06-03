@@ -13,7 +13,7 @@ import java.security.Principal;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/")
 public class BidController {
 
     private final BidService bidService;

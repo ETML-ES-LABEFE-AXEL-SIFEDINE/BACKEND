@@ -39,12 +39,12 @@ public class UserServiceImpl implements UserService {
     public Double topUp(String username, Double amount) {
         // Validation métier
         if (amount == null || amount < 100) {
-            throw new IllegalArgumentException("Le montant doit être ≥ 100 CHF");
+            throw new IllegalArgumentException("The amount must be ≥ 100 CHF");
         }
 
         // Récupération de l'utilisateur
         User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         // Mise à jour du solde
         double newBalance = user.getBalance() + amount;

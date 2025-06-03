@@ -27,26 +27,26 @@ public class BidServiceImpl implements BidService {
     public BidDTO placeBid(String username, Long lotId, Double amount) {
         // 1. Charger user & lot
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Lot lot = lotRepository.findById(lotId)
-                .orElseThrow(() -> new IllegalArgumentException("Lot inexistant"));
+                .orElseThrow(() -> new IllegalArgumentException("No lot"));
 
         // 2. Vérifications métier
         if (lot.getStatus() != LotStatus.IN_PROGRESS) {
-            throw new IllegalStateException("Les enchères sur ce lot ne sont pas ouvertes");
+            throw new IllegalStateException("Bids on this lot are not open");
         }
         Double currentPrice = lot.getCurrentPrice() != null
                 ? lot.getCurrentPrice()
                 : lot.getInitialPrice();
         if (amount <= currentPrice) {
-            throw new IllegalArgumentException("Le montant doit être supérieur au prix courant");
+            throw new IllegalArgumentException("The amount must be higher than the list price");
         }
         if (user.getBalance() < amount) {
-            throw new IllegalArgumentException("Solde insuffisant pour placer cette enchère");
+            throw new IllegalArgumentException("Insufficient balance to place this bid");
         }
         if (lot.getCurrentLeader() != null
                 && lot.getCurrentLeader().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Vous êtes déjà le meilleur enchérisseur");
+            throw new IllegalArgumentException("You're already the highest bidder");
         }
 
         // 3. Rembourse l’ancien leader

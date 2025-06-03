@@ -22,7 +22,7 @@ public class UserDetailsServiceImpl implements org.springframework.security.core
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "Utilisateur non trouvé avec le nom d'utilisateur : " + username));
+                        "User not found with username : " + username));
 
         // Conversion des rôles (String) en GrantedAuthority
         List<GrantedAuthority> authorities = user.getRoles().stream()
