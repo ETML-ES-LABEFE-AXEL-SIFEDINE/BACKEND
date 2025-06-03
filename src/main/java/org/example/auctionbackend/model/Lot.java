@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -19,6 +20,11 @@ public class Lot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** Propriétaire du lot */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 
     /** Titre court ou résumé du lot, pour l’affichage en liste */
     @Column(nullable = false, length = 255)
@@ -50,16 +56,16 @@ public class Lot {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    //prix courant :
+    /** Prix courant (mise actuelle ou prix initial si pas d’enchère) */
     @Column(name = "current_price", nullable = false)
     private Double currentPrice;
 
-    //leader courant
+    /** Utilisateur actuellement en tête des enchères */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_leader_id")
     private User currentLeader;
 
+    /** Liste des enchères associées à ce lot */
     @OneToMany(mappedBy = "lot", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Bid> bids;
-
 }

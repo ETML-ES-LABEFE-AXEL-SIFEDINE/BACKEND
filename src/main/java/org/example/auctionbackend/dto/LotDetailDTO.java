@@ -22,5 +22,5 @@ public class LotDetailDTO {
     private LocalDateTime endDate;
     private List<BidDTO> bids;
     private String currentLeaderUsername;
-
+    private String ownerUsername;
 }

@@ -44,13 +44,25 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/tokens").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/lots/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/lots").authenticated()
-                        .requestMatchers("/user/top-up").authenticated()
+
+                        .requestMatchers(HttpMethod.DELETE, "/lots/*").authenticated()
+                        .requestMatchers(HttpMethod.GET,    "/lots/user").authenticated()
+                        .requestMatchers(HttpMethod.POST,   "/lots").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/lots/recent").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/lots/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/lots").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/user/top-up").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/user/transactions").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/user/followed-lots").authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .authenticationManager(authManager)
