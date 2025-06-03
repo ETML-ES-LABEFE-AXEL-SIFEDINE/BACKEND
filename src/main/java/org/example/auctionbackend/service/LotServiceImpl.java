@@ -1,12 +1,12 @@
 package org.example.auctionbackend.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.auctionbackend.dto.LotDTO;
 import org.example.auctionbackend.dto.CreateLotRequestDTO;
+import org.example.auctionbackend.dto.LotDTO;
 import org.example.auctionbackend.dto.LotDetailDTO;
 import org.example.auctionbackend.model.Category;
-import org.example.auctionbackend.model.LotStatus;
 import org.example.auctionbackend.model.Lot;
+import org.example.auctionbackend.model.LotStatus;
 import org.example.auctionbackend.model.UserFollowedLot;
 import org.example.auctionbackend.repository.CategoryRepository;
 import org.example.auctionbackend.repository.LotRepository;
@@ -17,12 +17,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class LotServiceImpl implements LotService {
@@ -39,11 +40,12 @@ public class LotServiceImpl implements LotService {
                 ? lotRepository.findAll(pr)
                 : lotRepository.findByCategoryIdIn(collectCategoryIds(categoryId), pr);
 
-        return new PageImpl<>(
-                lotsPage.getContent().stream().map(this::toDTO).collect(Collectors.toList()),
-                pr,
-                lotsPage.getTotalElements()
-        );
+        // Met à jour le status avant conversion
+        List<LotDTO> dtos = lotsPage.getContent().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, pr, lotsPage.getTotalElements());
     }
 
     private List<Long> collectCategoryIds(Long categoryId) {
@@ -57,7 +59,10 @@ public class LotServiceImpl implements LotService {
     @Override
     public Optional<LotDetailDTO> findById(Long id) {
         return lotRepository.findById(id)
-                .map(this::toDetailDTO);
+                .map(lot -> {
+                    refreshLotStatus(lot);
+                    return toDetailDTO(lot);
+                });
     }
 
     @Override
@@ -88,7 +93,7 @@ public class LotServiceImpl implements LotService {
                         new IllegalArgumentException("Category not found: " + req.getCategoryId())
                 );
 
-        // 2) Construire l'entité Lot
+        // 2) Construire l'entité Lot (status initial = PENDING)
         Lot lot = Lot.builder()
                 .title(req.getTitle())
                 .description(req.getDescription())
@@ -103,14 +108,40 @@ public class LotServiceImpl implements LotService {
         // 3) Sauvegarder en base
         Lot saved = lotRepository.save(lot);
 
-        // 4) Retourner le DTO
+        // 4) Retourner le DTO mis à jour
         return toDTO(saved);
     }
 
-    // === mapping ===
+    /**
+     * Vérifie startDate/endDate et met à jour `lot.status` en base si nécessaire.
+     */
+    @Transactional
+    public void refreshLotStatus(Lot lot) {
+        LocalDateTime now = LocalDateTime.now();
+        LotStatus computed;
+        if (now.isBefore(lot.getStartDate())) {
+            computed = LotStatus.PENDING;
+        } else if (now.isAfter(lot.getEndDate())) {
+            computed = (lot.getCurrentLeader() != null)
+                    ? LotStatus.SOLD
+                    : LotStatus.UNSOLD;
+        } else {
+            computed = LotStatus.IN_PROGRESS;
+        }
+
+        if (lot.getStatus() != computed) {
+            lot.setStatus(computed);
+            lotRepository.save(lot);
+        }
+    }
+
+    // === mapping en LotDTO ===
 
     private LotDTO toDTO(Lot lot) {
-        double current = lot.getCurrentPrice() != null
+        // S’assurer que le status est à jour avant conversion
+        refreshLotStatus(lot);
+
+        double current = (lot.getCurrentPrice() != null)
                 ? lot.getCurrentPrice()
                 : lot.getInitialPrice();
 
@@ -121,31 +152,16 @@ public class LotServiceImpl implements LotService {
                 lot.getCategory().getId(),
                 lot.getInitialPrice(),
                 current,
-                computeStatus(lot)
+                lot.getStatus().name()
         );
     }
 
-    private String computeStatus(Lot lot) {
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(lot.getStartDate())) {
-            return LotStatus.PENDING.name();
-        }
-        if (now.isAfter(lot.getEndDate())) {
-            // fin atteinte : si un leader courant → VENDU sinon NON VENDU
-            return lot.getCurrentLeader() != null
-                    ? LotStatus.SOLD.name()
-                    : LotStatus.UNSOLD.name();
-        }
-        return LotStatus.IN_PROGRESS.name();
-    }
-
-
     private LotDetailDTO toDetailDTO(Lot lot) {
-        double current = lot.getCurrentPrice() != null
+        double current = (lot.getCurrentPrice() != null)
                 ? lot.getCurrentPrice()
                 : lot.getInitialPrice();
 
-        String leader = lot.getCurrentLeader() != null
+        String leader = (lot.getCurrentLeader() != null)
                 ? lot.getCurrentLeader().getUsername()
                 : null;
 
@@ -156,7 +172,7 @@ public class LotServiceImpl implements LotService {
                 lot.getCategory().getId(),
                 lot.getInitialPrice(),
                 current,
-                computeStatus(lot),
+                lot.getStatus().name(),
                 lot.getStartDate(),
                 lot.getEndDate(),
                 Collections.emptyList(),

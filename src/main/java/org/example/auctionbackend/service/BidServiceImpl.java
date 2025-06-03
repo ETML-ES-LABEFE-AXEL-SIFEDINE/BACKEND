@@ -21,6 +21,7 @@ public class BidServiceImpl implements BidService {
     private final BidRepository bidRepository;
     private final UserFollowedLotRepository followedLotRepository;
     private final UserTransactionRepository transactionRepository;
+    private final LotServiceImpl lotService; // pour rafraîchir le status
 
     @Override
     @PreAuthorize("isAuthenticated()")
@@ -31,25 +32,36 @@ public class BidServiceImpl implements BidService {
         Lot lot = lotRepository.findById(lotId)
                 .orElseThrow(() -> new IllegalArgumentException("No lot"));
 
-        // 2. Vérifications métier
+        // 1.1 Mettre à jour le statut du lot en fonction des dates
+        lotService.refreshLotStatus(lot);
+        // recharger le lot après mise à jour éventuelle du status
+        lot = lotRepository.findById(lotId).orElseThrow();
+
+        // 2. Vérifications métier sur le statut
         if (lot.getStatus() != LotStatus.IN_PROGRESS) {
             throw new IllegalStateException("Bids on this lot are not open");
         }
-        Double currentPrice = lot.getCurrentPrice() != null
+
+        // 3. Vérifier que le montant est supérieur au prix courant
+        Double currentPrice = (lot.getCurrentPrice() != null)
                 ? lot.getCurrentPrice()
                 : lot.getInitialPrice();
         if (amount <= currentPrice) {
-            throw new IllegalArgumentException("The amount must be higher than the list price");
+            throw new IllegalArgumentException("The amount must be higher than the current price");
         }
+
+        // 4. Vérifier solde utilisateur
         if (user.getBalance() < amount) {
             throw new IllegalArgumentException("Insufficient balance to place this bid");
         }
+
+        // 5. Vérifier que l'utilisateur n'est pas déjà le meilleur enchérisseur
         if (lot.getCurrentLeader() != null
                 && lot.getCurrentLeader().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You're already the highest bidder");
         }
 
-        // 3. Rembourse l’ancien leader
+        // 6. Rembourser l’ancien leader si nécessaire
         User prev = lot.getCurrentLeader();
         if (prev != null) {
             double prevAmt = currentPrice;
@@ -62,7 +74,7 @@ public class BidServiceImpl implements BidService {
             userRepository.save(prev);
         }
 
-        // 4. Débite le compte du nouvel enchérisseur
+        // 7. Débiter le compte du nouvel enchérisseur
         user.setBalance(user.getBalance() - amount);
         transactionRepository.save(UserTransaction.builder()
                 .user(user)
@@ -71,7 +83,7 @@ public class BidServiceImpl implements BidService {
                 .build());
         userRepository.save(user);
 
-        // 5. Crée la Bid
+        // 8. Créer la nouvelle Bid
         Bid bid = Bid.builder()
                 .lot(lot)
                 .user(user)
@@ -80,12 +92,12 @@ public class BidServiceImpl implements BidService {
                 .build();
         bid = bidRepository.save(bid);
 
-        // 6. Met à jour le lot
+        // 9. Mettre à jour le lot (currentPrice + currentLeader)
         lot.setCurrentPrice(amount);
         lot.setCurrentLeader(user);
         lotRepository.save(lot);
 
-        // 7. Suit le lot si pas déjà suivi
+        // 10. Suivre le lot si pas déjà suivi
         UserFollowedLotId key = new UserFollowedLotId(user.getId(), lot.getId());
         if (!followedLotRepository.existsById(key)) {
             followedLotRepository.save(UserFollowedLot.builder()
@@ -95,7 +107,7 @@ public class BidServiceImpl implements BidService {
                     .build());
         }
 
-        // 8. Retourne le DTO
+        // 11. Retourner le DTO de la nouvelle enchère
         return BidDTO.builder()
                 .id(bid.getId())
                 .lotId(lot.getId())
