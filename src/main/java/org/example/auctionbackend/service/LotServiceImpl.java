@@ -1,3 +1,5 @@
+// src/main/java/org/example/auctionbackend/service/LotServiceImpl.java
+
 package org.example.auctionbackend.service;
 
 import lombok.RequiredArgsConstructor;
@@ -225,9 +227,16 @@ public class LotServiceImpl implements LotService {
         return toDTO(relisted);
     }
 
+    /**
+     * Met à jour le statut du lot en fonction de la date courante.
+     * Si le statut passe de IN_PROGRESS → SOLD, on crédite le compte du vendeur et
+     * on crée une transaction SALE_PROCEEDS.
+     */
     @Transactional
     public void refreshLotStatus(Lot lot) {
         LocalDateTime now = LocalDateTime.now();
+
+        LotStatus oldStatus = lot.getStatus();
         LotStatus computed;
         if (now.isBefore(lot.getStartDate())) {
             computed = LotStatus.PENDING;
@@ -239,6 +248,28 @@ public class LotServiceImpl implements LotService {
             computed = LotStatus.IN_PROGRESS;
         }
 
+        // Si on passe de IN_PROGRESS (ou PENDING) vers SOLD :
+        if (oldStatus != LotStatus.SOLD && computed == LotStatus.SOLD) {
+            // 1) créditer le vendeur : montant = prix courant du lot
+            User seller = lot.getOwner();
+            double saleAmount = (lot.getCurrentPrice() != null)
+                    ? lot.getCurrentPrice()
+                    : lot.getInitialPrice();
+            seller.setBalance(seller.getBalance() + saleAmount);
+
+            // 2) enregistrer une transaction de type SALE_PROCEEDS
+            transactionRepository.save(
+                    UserTransaction.builder()
+                            .user(seller)
+                            .amount(saleAmount)
+                            .type(TransactionType.SALE_PROCEEDS)
+                            .build()
+            );
+
+            userRepository.save(seller);
+        }
+
+        // Mettre à jour le statut s’il a changé
         if (lot.getStatus() != computed) {
             lot.setStatus(computed);
             lotRepository.save(lot);

@@ -22,7 +22,7 @@ public interface LotRepository extends JpaRepository<Lot, Long> {
 
     /**
      * Récupère tous les lots dont le statut fait partie de la liste et dont la date de fin est avant la date cutoff.
-     * Utilisé pour le nettoyage des lots vendus ou invendus plus anciens que X jours.
+     * (utilisé par LotCleanupScheduler existant)
      */
     List<Lot> findAllByStatusInAndEndDateBefore(List<LotStatus> statuses, LocalDateTime cutoff);
 
@@ -30,4 +30,10 @@ public interface LotRepository extends JpaRepository<Lot, Long> {
      * Récupère tous les lots dont l’utilisateur propriétaire a pour nom d’utilisateur celui fourni.
      */
     List<Lot> findByOwnerUsername(String username);
+
+    /**
+     * NOUVEAU : récupérer tous les lots qui sont toujours IN_PROGRESS mais dont la date de fin est passée
+     * → Pour pouvoir basculer ces lots en SOLD/UNSOLD via un scheduler.
+     */
+    List<Lot> findAllByStatusAndEndDateBefore(LotStatus status, LocalDateTime cutoff);
 }
